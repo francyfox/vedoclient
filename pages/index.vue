@@ -1,37 +1,87 @@
 <template>
   <v-row justify="center" align="center">
     <v-col cols="12" sm="8" md="3">
+      <v-snackbar
+        v-model="snackbar"
+        :vertical="vertical"
+        top
+        left
+      >
+        <v-card-title>
+          Status code <strong>{{ AxiosLog.type }}</strong>
+        </v-card-title>
+        <v-card-text>
+          <pre>
+            <p>{{ AxiosLog.data }}</p>
+          </pre>
+        </v-card-text>
+        <v-btn
+          color="indigo"
+          text
+          @click="snackbar = false"
+        >
+          Close
+        </v-btn>
+      </v-snackbar>
       <v-tabs
         v-model="tabs"
         centered
       >
         <v-tab>
           <v-app-bar-title>
-            Registration
+            Auth
           </v-app-bar-title>
         </v-tab>
         <v-tab>
           <v-app-bar-title>
-            Auth
+            Registration
           </v-app-bar-title>
         </v-tab>
       </v-tabs>
       <v-tabs-items v-model="tabs">
         <v-tab-item>
           <v-card class="p20">
-            <form>
+            <v-form v-model="validAuth" lazy-validation>
               <v-text-field
-                v-model="username"
-                :error-messages="nameErrors"
+                v-model="authUser"
+                :rules="[v => v.length <= 10 || 'Max 10 characters']"
                 :counter="10"
                 label="Username"
                 required
-                @input="$v.username.$touch()"
-                @blur="$v.username.$touch()"
+              />
+              <v-text-field
+                v-model="authPass"
+                :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                :rules="[rules.required, rules.min]"
+                :type="show1 ? 'text' : 'password'"
+                label="Password"
+                required
+                counter
+                @click:append="show1 = !show1"
+              />
+              <v-btn
+                :disabled="!validAuth"
+                class="mr-4"
+                @click="submitAuth"
+              >
+                LOGIN
+              </v-btn>
+            </v-form>
+          </v-card>
+        </v-tab-item>
+        <v-tab-item>
+          <v-card class="p20">
+            <v-form v-model="validReg" lazy-validation>
+              <v-text-field
+                v-model="username"
+                :rules="[v => v.length <= 10 || 'Max 10 characters']"
+                :counter="10"
+                label="Username"
+                required
               />
               <v-text-field
                 v-model="email"
-                :error-messages="emailErrors"
+                :rules="[rules.required, rules.email]"
                 label="E-mail"
                 required
               />
@@ -48,7 +98,7 @@
               <v-text-field
                 v-model="repeatPass"
                 :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-                :rules="[rules.required, rules.min]"
+                :rules="[rules.required, rules.min, passwordConfirmationRule]"
                 :type="show1 ? 'text' : 'password'"
                 label="Repeat Password"
                 required
@@ -62,10 +112,9 @@
                 >
                   <v-text-field
                     v-model="name"
+                    :rules="[rules.required]"
                     label="Name"
                     required
-                    @input="$v.name.$touch()"
-                    @blur="$v.name.$touch()"
                   />
                 </v-col>
                 <v-col
@@ -74,6 +123,7 @@
                 >
                   <v-text-field
                     v-model="lastname"
+                    :rules="[rules.required]"
                     label="Lastname"
                     required
                   />
@@ -90,6 +140,7 @@
                 <template #activator="{ on, attrs }">
                   <v-text-field
                     v-model="date"
+                    :rules="[rules.required]"
                     label="Birthday date"
                     prepend-icon="mdi-calendar"
                     readonly
@@ -105,6 +156,16 @@
                   @change="save"
                 />
               </v-menu>
+              <v-text-field
+                v-model="work"
+                :rules="[v => v.length <= 10 || 'Max 20 characters']"
+                label="Work"
+              />
+              <v-text-field
+                v-model="hobby"
+                :rules="[v => v.length <= 10 || 'Max 20 characters']"
+                label="Hobby"
+              />
               <v-row>
                 <v-col
                   cols="12"
@@ -112,7 +173,8 @@
                 >
                   <v-select
                     v-model="like"
-                    :items="like.items"
+                    :rules="[rules.required]"
+                    :items="LikeItems"
                     chips
                     label="Like"
                     multiple
@@ -125,7 +187,8 @@
                 >
                   <v-select
                     v-model="dislike"
-                    :items="dislike.items"
+                    :rules="[rules.required]"
+                    :items="DisLikeItems"
                     chips
                     label="Dislike"
                     multiple
@@ -133,30 +196,53 @@
                   />
                 </v-col>
               </v-row>
+              <v-row class="between">
+                <v-checkbox
+                  v-model="married"
+                  label="Married?"
+                />
+                <v-checkbox
+                  v-model="childs"
+                  label="Childs?"
+                />
+              </v-row>
+
               <v-checkbox
                 v-model="checkbox"
-                :error-messages="checkboxErrors"
-                label="Do you agree?"
-                required
-                @change="$v.checkbox.$touch()"
-                @blur="$v.checkbox.$touch()"
-              />
+                :rules="[rules.required]"
+              >
+                <template v-slot:label>
+                  <div>
+                    I agree with
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on }">
+                        <a
+                          target="_blank"
+                          href="https://vuetifyjs.com"
+                          @click.stop
+                          v-on="on"
+                        >
+                          Agreement
+                        </a>
+                      </template>
+                      Opens in new window
+                    </v-tooltip>
+                     page
+                  </div>
+                </template>
+              </v-checkbox>
 
               <v-btn
+                :disabled="!validReg"
                 class="mr-4"
-                @click="submit"
+                @click="submitReg"
               >
                 submit
               </v-btn>
               <v-btn @click="clear">
                 clear
               </v-btn>
-            </form>
-          </v-card>
-        </v-tab-item>
-        <v-tab-item>
-          <v-card>
-            <h3>test item</h3>
+            </v-form>
           </v-card>
         </v-tab-item>
       </v-tabs-items>
@@ -165,8 +251,10 @@
 </template>
 
 <script>
+import axios from 'axios'
 import { validationMixin } from 'vuelidate'
 import { required, maxLength, email } from 'vuelidate/lib/validators'
+const url = 'http://127.0.0.1:8000/api/'
 
 export default {
   mixins: [validationMixin],
@@ -183,28 +271,39 @@ export default {
   },
 
   data: () => ({
+    snackbar: false,
+    AxiosLog: {
+      type: '',
+      data: ''
+    },
+    validReg: false,
+    validAuth: false,
     tabs: null,
+    authUser: '',
+    authPass: '',
     username: '',
     email: '',
     name: '',
     lastname: '',
     password: '',
     repeatPass: '',
-    like: {
-      items: [
-        'chips', 'wine', 'beer', 'shark'
-      ]
-    },
-    dislike: {
-      items: [
-        'avacado', 'Morgenstern', 'Adam Sendler'
-      ]
-    },
+    hobby: '',
+    work: '',
+    married: false,
+    childs: false,
+    like: [],
+    LikeItems: [
+      'chips', 'wine', 'beer', 'shark'
+    ],
+    dislike: [],
+    DisLikeItems: [
+      'avacado', 'Morgenstern', 'Adam Sendler'
+    ],
     show1: false,
     rules: {
       required: value => !!value || 'Required.',
       min: v => v.length >= 8 || 'Min 8 characters',
-      emailMatch: () => ('The email and password you entered don\'t match')
+      email: v => /.+@.+/.test(v) || 'E-mail must be valid'
     },
 
     date: null,
@@ -212,47 +311,8 @@ export default {
     checkbox: false
   }),
   computed: {
-    checkboxErrors () {
-      const errors = []
-      if (!this.$v.checkbox.$dirty) {
-        return errors
-      }
-      return errors
-    },
-    selectErrors () {
-      const errors = []
-      if (!this.$v.select.$dirty) {
-        return errors
-      }
-      !this.$v.select.required && errors.push('Item is required')
-      return errors
-    },
-    usernameErrors () {
-      const errors = []
-      if (!this.$v.username.$dirty) {
-        return errors
-      }
-
-      !this.$v.username.maxLength && errors.push('Username must be at most 10 characters long')
-      !this.$v.username.required && errors.push('Username is required.')
-      return errors
-    },
-    nameErrors () {
-      const errors = []
-      if (!this.$v.name.$dirty) {
-        return errors
-      }
-      !this.$v.name.required && errors.push('Name is required.')
-      return errors
-    },
-    emailErrors () {
-      const errors = []
-      if (!this.$v.email.$dirty) {
-        return errors
-      }
-      !this.$v.email.email && errors.push('Must be valid e-mail')
-      !this.$v.email.required && errors.push('E-mail is required')
-      return errors
+    passwordConfirmationRule () {
+      return () => (this.password === this.repeatPass) || 'Password must match'
     }
   },
   watch: {
@@ -264,8 +324,63 @@ export default {
     save (date) {
       this.$refs.menu.save(date)
     },
-    submit () {
-      this.$v.$touch()
+    submitReg () {
+      const userInfo = {
+        username: this.username.toString(),
+        roles: ['ROLE_USER'],
+        password: this.password.toString(),
+        email: this.email,
+        name: this.name,
+        lastname: this.lastname,
+        birthday: this.date,
+        work: this.work,
+        hobby: this.hobby,
+        married: this.married,
+        childs: this.childs,
+        country: 'Vaflandia',
+        like: JSON.stringify(this.like),
+        dislike: JSON.stringify(this.like),
+        disc: {
+          CorrelationCoefficent: 0,
+          Dominance: 0,
+          Influence: 0,
+          Steadness: 0,
+          Conscient: 0,
+          correlationCoefficent: 0,
+          dominance: 0,
+          influence: 0,
+          steadness: 0,
+          conscient: 0
+        }
+      }
+      const app = this
+      if (this.username) {
+        // TODO: delete import, replace this.$axios
+        axios
+          .post(url + 'users', userInfo)
+          .then(function (response) {
+            app.snackbar = true
+            app.AxiosLog.type = response.status
+            app.AxiosLog.data = response.data
+          })
+      }
+    },
+    submitAuth () {
+      const app = this
+      const userInfo = {
+        username: this.authUser,
+        password: this.authPass
+      }
+      axios
+        .post(url + 'auth', userInfo)
+        .then(function (response) {
+          app.snackbar = true
+          app.AxiosLog.type = response.status
+          app.AxiosLog.data = response.data
+          localStorage.setItem('username', this.authUser)
+          localStorage.setItem('token', response.data)
+          app.$router.push({ path: '/home' })
+        })
     },
     clear () {
       this.$v.$reset()
@@ -279,7 +394,31 @@ export default {
 </script>
 
 <style lang="scss">
+  .success, .error {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .success{
+    color: #82bf82;
+  }
+  .error{
+    color: #d26f6f;
+  }
   .p20{
     padding: 20px;
+  }
+  .v-main__wrap > .container{
+    display: flex;
+    height: 100%;
+  }
+  .between{
+    margin-top: 0 !important;
+    margin-left: 1px !important;
+    width: 100%;
+    height: 40px;
+    > div {
+      margin: 0 !important;
+      margin-right: 10px !important;
+    }
   }
 </style>
