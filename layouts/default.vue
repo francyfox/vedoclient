@@ -5,8 +5,7 @@
         <nuxt />
       </v-container>
     </v-main>
-
-    <v-footer :absolute="!fixed" app>
+    <v-footer app>
       <span>&copy; Vedofair {{ new Date().getFullYear() }}</span>
     </v-footer>
   </v-app>

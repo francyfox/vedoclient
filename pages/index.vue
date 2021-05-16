@@ -3,12 +3,13 @@
     <v-col cols="12" sm="8" md="3">
       <v-snackbar
         v-model="snackbar"
-        :vertical="vertical"
         top
         left
       >
         <v-card-title>
-          Status code <strong>{{ AxiosLog.type }}</strong>
+          Status code
+          <strong v-if="error" class="error">[ {{ AxiosLog.type }} ]</strong>
+          <strong v-else class="success">[ {{ AxiosLog.type }} ]</strong>
         </v-card-title>
         <v-card-text>
           <pre>
@@ -271,6 +272,7 @@ export default {
   },
 
   data: () => ({
+    error: false,
     snackbar: false,
     AxiosLog: {
       type: '',
@@ -377,9 +379,20 @@ export default {
           app.snackbar = true
           app.AxiosLog.type = response.status
           app.AxiosLog.data = response.data
-          localStorage.setItem('username', this.authUser)
+          localStorage.setItem('username', app.$data.authUser)
           localStorage.setItem('token', response.data)
           app.$router.push({ path: '/home' })
+        })
+        .catch(function (error) {
+          // eslint-disable-next-line eqeqeq
+          if (error.response.status == 201) {
+            app.error = false
+          } else {
+            app.error = true
+          }
+          app.snackbar = true
+          app.AxiosLog.type = error.response.status
+          app.AxiosLog.data = error.response.data
         })
     },
     clear () {
@@ -389,19 +402,32 @@ export default {
       this.select = null
       this.checkbox = false
     }
+  },
+  mounted () {
+    if (localStorage.token) {
+      this.$router.push({ path: '/home' })
+    }
   }
 }
 </script>
 
 <style lang="scss">
-  .success, .error {
+  .v-snack__content{
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .v-application .success, .v-application .error {
+    margin-left: 5px;
     font-size: 20px;
     font-weight: bold;
   }
-  .success{
+  .v-application .success{
+    background: transparent !important;
     color: #82bf82;
   }
-  .error{
+  .v-application .error{
+    background: transparent !important;
     color: #d26f6f;
   }
   .p20{
