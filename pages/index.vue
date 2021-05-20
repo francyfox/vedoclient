@@ -252,7 +252,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import { validationMixin } from 'vuelidate'
 import { required, maxLength, email } from 'vuelidate/lib/validators'
 const url = 'http://127.0.0.1:8000/api/'
@@ -357,8 +356,7 @@ export default {
       }
       const app = this
       if (this.username) {
-        // TODO: delete import, replace this.$axios
-        axios
+        this.$axios
           .post(url + 'users', userInfo)
           .then(function (response) {
             app.snackbar = true
@@ -373,7 +371,7 @@ export default {
         username: this.authUser,
         password: this.authPass
       }
-      axios
+      this.$axios
         .post(url + 'auth', userInfo)
         .then(function (response) {
           app.snackbar = true

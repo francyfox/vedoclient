@@ -2,6 +2,9 @@ import colors from 'vuetify/es5/util/colors'
 
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
+  server: {
+    host: '0' // default: localhost
+  },
   head: {
     titleTemplate: 'vedoclient',
     title: 'vedoclient',
@@ -44,6 +47,7 @@ export default {
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
+    defaultAssets: {icons: 'fa' },
     customVariables: ['~/assets/variables.scss'],
     theme: {
       dark: true,
