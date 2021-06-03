@@ -209,8 +209,9 @@
               <v-row justify="space-between" class="message">
                 <v-col
                   cols="7"
-                  v-text="event.text"
-                />
+                >
+                  <strong>-- {{ event.user }} // </strong>{{ event.text }}
+                </v-col>
                 <v-col
                   class="text-right"
                   cols="5"
@@ -236,7 +237,11 @@ export default {
   },
   data: () => ({
     clientInformation: {
-      username: new Date().getTime().toString()
+      room: 0,
+      id: 0,
+      uuid: new Date().getTime().toString(),
+      user: '',
+      time: ''
     },
     connection: null,
     group: {},
@@ -261,31 +266,36 @@ export default {
   },
   methods: {
     appendMessage (username, message) {
+      const timeEvent = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
+        return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
+      })
       let from
 
-      if (username === clientInformation.username) {
+      if (username === this.clientInformation.uuid) {
         from = 'me'
       } else {
         // eslint-disable-next-line no-unused-vars
-        from = clientInformation.username
+        from = this.clientInformation.uuid
       }
 
       // Append List Item
-      const time = (new Date()).toTimeString()
       this.events.push({
-        id: this.nonce++,
+        id: this.nonce,
+        user: this.username,
         text: this.input,
-        time: time.replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
-          return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
-        })
+        time: timeEvent
       })
     },
     comment () {
+      this.clientInformation.id = this.nonce++
+      this.clientInformation.time = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
+        return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
+      })
       this.clientInformation.message = this.input
       // Send info as JSON
       this.connection.send(JSON.stringify(this.clientInformation))
       // Add my own message to the list
-      this.appendMessage(this.clientInformation.username, this.clientInformation.message)
+      this.appendMessage(this.clientInformation.uuid, this.clientInformation.message)
       this.input = null
     }
   },
@@ -293,6 +303,7 @@ export default {
     this.group = this.$store.getters['groups/getCurrentGroup']
     if (process.browser) {
       this.username = localStorage.username
+      this.clientInformation.user = localStorage.username
     }
     // STORAGE
 
@@ -305,8 +316,9 @@ export default {
       const data = JSON.parse(e.data)
       console.log(app.events)
       app.events.push({
-        id: this.nonce++,
-        time: data.username,
+        id: data.id,
+        user: data.user,
+        time: data.time,
         text: data.message
       })
       app.timeline()
