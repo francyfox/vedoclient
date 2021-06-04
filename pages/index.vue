@@ -212,11 +212,11 @@
                 v-model="checkbox"
                 :rules="[rules.required]"
               >
-                <template v-slot:label>
+                <template #label>
                   <div>
                     I agree with
                     <v-tooltip bottom>
-                      <template v-slot:activator="{ on }">
+                      <template #activator="{ on }">
                         <a
                           target="_blank"
                           href="https://vuetifyjs.com"
@@ -228,7 +228,7 @@
                       </template>
                       Opens in new window
                     </v-tooltip>
-                     page
+                    page
                   </div>
                 </template>
               </v-checkbox>
@@ -321,6 +321,11 @@ export default {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
     }
   },
+  mounted () {
+    if (localStorage.token) {
+      this.$router.push({ path: '/home' })
+    }
+  },
   methods: {
     save (date) {
       this.$refs.menu.save(date)
@@ -354,43 +359,42 @@ export default {
           conscient: 0
         }
       }
-      const app = this
+
       if (this.username) {
         this.$axios
           .post(url + 'users', userInfo)
-          .then(function (response) {
-            app.snackbar = true
-            app.AxiosLog.type = response.status
-            app.AxiosLog.data = response.data
+          .then((response) => {
+            this.snackbar = true
+            this.AxiosLog.type = response.status
+            this.AxiosLog.data = response.data
           })
       }
     },
     submitAuth () {
-      const app = this
       const userInfo = {
         username: this.authUser,
         password: this.authPass
       }
       this.$axios
         .post(url + 'auth', userInfo)
-        .then(function (response) {
-          app.snackbar = true
-          app.AxiosLog.type = response.status
-          app.AxiosLog.data = response.data
-          localStorage.setItem('username', app.$data.authUser)
+        .then((response) => {
+          this.snackbar = true
+          this.AxiosLog.type = response.status
+          this.AxiosLog.data = response.data
+          localStorage.setItem('username', this.$data.authUser)
           localStorage.setItem('token', response.data)
-          app.$router.push({ path: '/home' })
+          this.$router.push({ path: '/home' })
         })
-        .catch(function (error) {
+        .catch((error) => {
           // eslint-disable-next-line eqeqeq
           if (error.response.status == 201) {
-            app.error = false
+            this.error = false
           } else {
-            app.error = true
+            this.error = true
           }
-          app.snackbar = true
-          app.AxiosLog.type = error.response.status
-          app.AxiosLog.data = error.response.data
+          this.snackbar = true
+          this.AxiosLog.type = error.response.status
+          this.AxiosLog.data = error.response.data
         })
     },
     clear () {
@@ -399,11 +403,6 @@ export default {
       this.email = ''
       this.select = null
       this.checkbox = false
-    }
-  },
-  mounted () {
-    if (localStorage.token) {
-      this.$router.push({ path: '/home' })
     }
   }
 }

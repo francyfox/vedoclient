@@ -311,17 +311,15 @@ export default {
     this.connection.onopen = function (e) {
       console.log('connection established succesfully')
     }
-    const app = this
-    this.connection.onmessage = function (e) {
+    this.connection.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      console.log(app.events)
-      app.events.push({
+      this.events.push({
         id: data.id,
         user: data.user,
         time: data.time,
         text: data.message
       })
-      app.timeline()
+      this.timeline()
     }
     this.connection.onerror = function (e) {
       alert('Error: something went wrong with the socket.')
