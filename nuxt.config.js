@@ -64,6 +64,9 @@ export default {
       },
     },
   },
+  globals: {
+    serverUrl: 'http://127.0.0.1:8000/api'
+  },
   extend(config, ctx) {
     if(ctx.idDev) {
       config.entry.push('eventsource-polyfill')

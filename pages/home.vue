@@ -153,13 +153,13 @@
       v-model="drawer"
       app
     >
-      <groups></groups>
+      <groups :userInfo="userInfo"/>
     </v-navigation-drawer>
     <v-navigation-drawer
       app
       right
     >
-      <user-panel :username="username"></user-panel>
+      <user-panel :username="username" :userInfo="userInfo"></user-panel>
     </v-navigation-drawer>
     <v-main>
       <v-container>
@@ -236,6 +236,7 @@ export default {
     groups
   },
   data: () => ({
+    userInfo: {},
     clientInformation: {
       room: 0,
       id: 0,
@@ -248,11 +249,7 @@ export default {
     pallete: false,
     username: '',
     valid: true,
-    users: [
-      'Alabama', 'Alaska', 'American Samoa', 'Arizona',
-      'Arkansas', 'California', 'Colorado', 'this.connectionecticut',
-      'Delaware', 'District of Columbia', 'Federated States of Micronesia'
-    ],
+    users: [],
     events: [],
     input: null,
     nonce: 0,
@@ -300,6 +297,8 @@ export default {
     }
   },
   mounted () {
+    // #TODO: Refactor mounted hook, put methods to Vuex Actions
+
     this.group = this.$store.getters['groups/getCurrentGroup']
     if (process.browser) {
       this.username = localStorage.username
@@ -308,9 +307,7 @@ export default {
     // STORAGE
 
     this.connection = new WebSocket('ws://localhost:8080')
-    this.connection.onopen = function (e) {
-      console.log('connection established succesfully')
-    }
+    this.connection.onopen = function (e) {}
     this.connection.onmessage = (e) => {
       const data = JSON.parse(e.data)
       this.events.push({
@@ -326,6 +323,10 @@ export default {
       console.error(e)
     }
     // END SOCKET CONFIG
+    this.$store.dispatch('user/getUserInfo').then(() => {
+      console.log(this.$store.getters['user/getUser'])
+      this.userInfo = this.$store.getters['user/getUser']
+    })
   }
 }
 </script>

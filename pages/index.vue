@@ -321,11 +321,6 @@ export default {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))
     }
   },
-  mounted () {
-    if (localStorage.token) {
-      this.$router.push({ path: '/home' })
-    }
-  },
   methods: {
     save (date) {
       this.$refs.menu.save(date)
@@ -403,6 +398,11 @@ export default {
       this.email = ''
       this.select = null
       this.checkbox = false
+    }
+  },
+  mounted () {
+    if (localStorage.token) {
+      this.$router.push({ path: '/home' })
     }
   }
 }

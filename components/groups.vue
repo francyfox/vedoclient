@@ -40,15 +40,14 @@
             <v-checkbox
               v-model="roleplay"
               :label="`Enable RolePlay mode`"
-            >
-            </v-checkbox>
+            />
             <v-radio-group v-model="security">
-              <v-radio value=false>
+              <v-radio value="false">
                 <template #label>
                   <strong class="success--text">OPEN</strong>
                 </template>
               </v-radio>
-              <v-radio value=true>
+              <v-radio value="true">
                 <template #label>
                   <strong class="primary--text">CLOSE</strong>
                 </template>
@@ -98,19 +97,19 @@
               <div class="avatar">
                 <v-icon>fa-circle</v-icon>
                 <v-avatar size="50">
-                  <v-img src="https://cdn.vuetifyjs.com/images/lists/2.jpg"></v-img>
+                  <v-img src="https://cdn.vuetifyjs.com/images/lists/2.jpg" />
                 </v-avatar>
               </div>
             </v-badge>
           </div>
           <v-list-item-content>
             <v-list-item-title class="title">
-              <span class="--text error--text"><strong class="amber--text">ID:</strong> {{group[0].id }}</span> | {{ group[0].groupName }}
+              <span class="--text error--text"><strong class="amber--text">ID:</strong> {{ group[0].id }}</span> | {{ group[0].groupName }}
             </v-list-item-title>
             <v-list-item-subtitle>
-            <span class="user_tag" v-for="user in group[0].users" :key="user.index">
-              {{ user }}
-            </span>
+              <span v-for="group in userInfo.groupList" :key="group.index" class="user_tag">
+                {{ group }}
+              </span>
             </v-list-item-subtitle>
           </v-list-item-content>
           <v-menu
@@ -119,16 +118,18 @@
             :nudge-width="200"
             offset-x
           >
-            <template v-slot:activator="{ on, attrs}">
+            <template #activator="{ on, attrs}">
               <v-btn
+                v-model="dialogNote[group[0].id]"
                 class="edit-group"
                 dark
                 v-bind="attrs"
                 v-on="on"
-                v-model="dialogNote[group[0].id]"
                 @click="$set(dialogNote, group[0].id, true)"
               >
-                <v-icon size="15">fas fa-edit</v-icon>
+                <v-icon size="15">
+                  fas fa-edit
+                </v-icon>
               </v-btn>
             </template>
 
@@ -159,7 +160,7 @@
                 </v-list-item>
               </v-list>
 
-              <v-divider></v-divider>
+              <v-divider />
 
               <v-list>
                 <v-list-item>
@@ -167,29 +168,27 @@
                     <v-switch
                       v-model="message"
                       color="purple"
-                    ></v-switch>
+                    />
                   </v-list-item-action>
                   <v-list-item-title>Open Group</v-list-item-title>
                 </v-list-item>
 
-                <v-list-item>
-
-                </v-list-item>
+                <v-list-item />
               </v-list>
 
               <v-card-actions>
-                <v-spacer></v-spacer>
+                <v-spacer />
 
                 <v-btn
-                  v-bind:class="'group-'+group[0].id"
+                  :class="'group-'+group[0].id"
                   text
                   @click.stop="$set(dialogNote, group[0].id, false)"
                 >
                   Cancel
                 </v-btn>
-                <v-spacer></v-spacer>
+                <v-spacer />
                 <v-btn
-                  v-bind:class="'group-'+group[0].id"
+                  :class="'group-'+group[0].id"
                   text
                   @click="deleteGroup(group[0].id)"
                 >
@@ -207,14 +206,16 @@
           </v-menu>
         </v-list-item>
       </v-list-item-group>
-
     </v-list>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'groups',
+  name: 'Groups',
+  props: {
+    userInfo: Object
+  },
   data: () => ({
     selectedGroup: 0,
     security: true,
@@ -225,6 +226,20 @@ export default {
     groups_list: [],
     groupId: 0
   }),
+  mounted () {
+    // this.$axios
+    //   .get('http://127.0.0.1:8000/api/groups')
+    //   .then((response) => {
+    //     const groups = (Object.entries(response.data['hydra:member']))
+    //     groups.forEach(function (item) {
+    //       item.shift()
+    //     })
+    //     this.$data.groups_list = groups
+    //     this.currentGroup = this.groups_list[this.selectedGroup][0].groupName
+    //     const newOption = { id: this.selectedGroup, name: this.currentGroup }
+    //     this.$store.commit('groups/set_current', newOption)
+    //   })
+  },
   methods: {
     changeGroup () {
       this.$store.commit('groups/set_current', { id: this.selectedGroup, name: this.groups_list[this.selectedGroup][0].groupName })
@@ -253,22 +268,6 @@ export default {
           )
         })
     }
-  },
-  mounted () {
-    // this.currentGroupId = this.groups_list[this.selectedGroup].groupName
-    const app = this
-    this.$axios
-      .get('http://127.0.0.1:8000/api/groups')
-      .then(function (response) {
-        const groups = (Object.entries(response.data['hydra:member']))
-        groups.forEach(function (item) {
-          item.shift()
-        })
-        app.$data.groups_list = groups
-        app.currentGroup = app.groups_list[app.selectedGroup][0].groupName
-        const newOption = { id: app.selectedGroup, name: app.currentGroup }
-        app.$store.commit('groups/set_current', newOption)
-      })
   }
 }
 </script>

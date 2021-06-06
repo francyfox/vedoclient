@@ -14,7 +14,7 @@
             offset-y="15"
           >
             <v-avatar size="50">
-              <v-img src="https://static.vecteezy.com/system/resources/thumbnails/000/546/910/small/fox_007.jpg" />
+              <v-img :src="userInfo.profileUrl" />
             </v-avatar>
           </v-badge>
         </div>
@@ -23,7 +23,7 @@
             {{ username }}
           </v-list-item-title>
           <v-list-item-subtitle>
-            Admin
+            {{ userInfo.name }} {{ userInfo.lastname }}
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-row>
@@ -36,14 +36,19 @@
         <v-icon>fa-user-cog</v-icon>
       </v-tab>
     </v-tabs>
+    <search-room userInfo="userInfo"></search-room>
     <v-list>
       <v-list-item
-        v-for="n in 5"
-        :key="n"
+        v-for="user in userInfo.friendList"
+        :key="user.index"
         link
       >
+        <v-list-item-avatar>
+          <v-img :src="user.profileUrl" />
+        </v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title>Item {{ n }}</v-list-item-title>
+          <v-list-item-title>{{ user.username }}</v-list-item-title>
+          <v-list-item-subtitle>{{ user.name }} {{ user.lastname }}</v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
     </v-list>
@@ -51,10 +56,15 @@
 </template>
 
 <script>
+import searchRoom from './searchRoom'
 export default {
   name: 'userPanel',
+  components: {
+    searchRoom
+  },
   props: {
-    username: String
+    username: String,
+    userInfo: Object
   }
 }
 </script>
