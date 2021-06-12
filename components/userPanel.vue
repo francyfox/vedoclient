@@ -36,10 +36,10 @@
         <v-icon>fa-user-cog</v-icon>
       </v-tab>
     </v-tabs>
-    <search-room userInfo="userInfo"></search-room>
+    <search-room :userInfo="userInfo" mode="users"></search-room>
     <v-list>
       <v-list-item
-        v-for="user in userInfo.friendList"
+        v-for="user in userInfo.FriendList"
         :key="user.index"
         link
       >

@@ -1,5 +1,6 @@
 <template>
   <div>
+    <search-room :userInfo="userInfo" mode="groups"></search-room>
     <v-dialog
       v-model="dialog"
       persistent
@@ -59,7 +60,6 @@
           <v-btn
             class="mr-4"
             type="submit"
-            :disabled="invalid"
             @click="addGroup"
           >
             submit
@@ -82,8 +82,8 @@
         active-class="activeGroup"
       >
         <v-list-item
-          v-for="group in groups_list"
-          :key="group.groupName"
+          v-for="group in userInfo.GroupList"
+          :key="group.index"
           @click="changeGroup"
         >
           <div class="mx-3">
@@ -97,113 +97,21 @@
               <div class="avatar">
                 <v-icon>fa-circle</v-icon>
                 <v-avatar size="50">
-                  <v-img src="https://cdn.vuetifyjs.com/images/lists/2.jpg" />
+                  <v-img :src="group.imageUrl" />
                 </v-avatar>
               </div>
             </v-badge>
           </div>
           <v-list-item-content>
             <v-list-item-title class="title">
-              <span class="--text error--text"><strong class="amber--text">ID:</strong> {{ group[0].id }}</span> | {{ group[0].groupName }}
+              <span class="--text error--text"><strong class="amber--text">ID:</strong> {{ group.id }}</span> | {{ group.groupName }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              <span v-for="group in userInfo.groupList" :key="group.index" class="user_tag">
-                {{ group }}
+              <span v-for="user in group.users" :key="user.index" class="user_tag">
+                {{ user }}
               </span>
             </v-list-item-subtitle>
           </v-list-item-content>
-          <v-menu
-            v-model="dialogNote[group[0].id]"
-            :close-on-content-click="false"
-            :nudge-width="200"
-            offset-x
-          >
-            <template #activator="{ on, attrs}">
-              <v-btn
-                v-model="dialogNote[group[0].id]"
-                class="edit-group"
-                dark
-                v-bind="attrs"
-                v-on="on"
-                @click="$set(dialogNote, group[0].id, true)"
-              >
-                <v-icon size="15">
-                  fas fa-edit
-                </v-icon>
-              </v-btn>
-            </template>
-
-            <v-card>
-              <v-list>
-                <v-list-item>
-                  <v-list-item-avatar>
-                    <img
-                      src="https://cdn.vuetifyjs.com/images/john.jpg"
-                      alt="John"
-                    >
-                  </v-list-item-avatar>
-
-                  <v-list-item-content>
-                    <v-list-item-title>John Leider</v-list-item-title>
-                    <v-list-item-subtitle>Founder of Vuetify</v-list-item-subtitle>
-                  </v-list-item-content>
-
-                  <v-list-item-action>
-                    <v-btn
-                      :class="fav ? 'red--text' : ''"
-                      icon
-                      @click="fav = !fav"
-                    >
-                      <v-icon>mdi-heart</v-icon>
-                    </v-btn>
-                  </v-list-item-action>
-                </v-list-item>
-              </v-list>
-
-              <v-divider />
-
-              <v-list>
-                <v-list-item>
-                  <v-list-item-action>
-                    <v-switch
-                      v-model="message"
-                      color="purple"
-                    />
-                  </v-list-item-action>
-                  <v-list-item-title>Open Group</v-list-item-title>
-                </v-list-item>
-
-                <v-list-item />
-              </v-list>
-
-              <v-card-actions>
-                <v-spacer />
-
-                <v-btn
-                  :class="'group-'+group[0].id"
-                  text
-                  @click.stop="$set(dialogNote, group[0].id, false)"
-                >
-                  Cancel
-                </v-btn>
-                <v-spacer />
-                <v-btn
-                  :class="'group-'+group[0].id"
-                  text
-                  @click="deleteGroup(group[0].id)"
-                >
-                  DELETE
-                </v-btn>
-                <v-btn
-                  color="primary"
-                  text
-                  @click="menu = false"
-                >
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-menu>
         </v-list-item>
       </v-list-item-group>
     </v-list>
@@ -223,7 +131,6 @@ export default {
     userSelect: [],
     dialogNote: {},
     dialog: false,
-    groups_list: [],
     groupId: 0
   }),
   mounted () {

@@ -10,9 +10,9 @@
     filled
     chips
     color="blue-grey lighten-2"
-    label="User Search"
-    item-text="username"
-    item-value="username"
+    :label="mode + ' search'"
+    :item-text="inputType"
+    :item-value="inputType"
     return-object
   >
     <template #selection="data">
@@ -24,9 +24,9 @@
         @click:close="remove(data.item)"
       >
         <v-avatar left>
-          <v-img :src="data.item.profileUrl" />
+          <v-img :src="data.item.profileUrl || data.item.imageUrl" />
         </v-avatar>
-        {{ data.item.username }}
+        {{ data.item.username || data.item.groupName }}
         <v-btn
           :data="data.item.name"
           text
@@ -44,11 +44,19 @@
       </template>
       <template v-else>
         <v-list-item-avatar>
-          <img :src="data.item.profileUrl">
+          <v-img v-if="mode == 'users'" :src="data.item.profileUrl" />
+          <v-img v-else :src="data.item.imageUrl" />
         </v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title v-html="data.item.username" />
-          <v-list-item-subtitle v-html="data.item.name +' '+ data.item.lastname" />
+          <v-list-item-title v-html="data.item.username || data.item.groupName" />
+          <v-list-item-subtitle v-if="mode == 'users'">
+            {{ data.item.name }} {{ data.item.lastname }}
+          </v-list-item-subtitle>
+          <v-list-item-subtitle v-else>
+            <span class="user_tag" v-for="user in data.item.users" :key="user.index">
+              {{ user }}
+            </span>
+          </v-list-item-subtitle>
         </v-list-item-content>
       </template>
     </template>
@@ -58,9 +66,15 @@
 <script>
 const url = 'http://127.0.0.1:8000/api/'
 export default {
+  // TODO: <v-autocomplete> :item-text  && :item-value not working with dynamic attributes
   // TODO: Put userInfo and API URL to store, and set 1 search component
   name: 'searchRoom',
+  props: {
+    mode: String,
+    userInfo: Object
+  },
   data: () => ({
+    inputType: 'users',
     descriptionLimit: 60,
     autoUpdate: true,
     friend: null,
@@ -68,6 +82,11 @@ export default {
     people: [],
     search: null
   }),
+  created () {
+    if (this.mode === 'groups') {
+      this.inputType = 'groupName'
+    }
+  },
   computed: {
     fields () {
       if (!this.model) { return [] }
@@ -100,12 +119,16 @@ export default {
       this.isLoading = true
 
       // Lazily load input items
+      let queryFind = 'username'
+      if (this.mode === 'groups') {
+        queryFind = 'groupName'
+      }
 
-      const loadUserUrl = url + 'users?username=' + val
-      console.log(loadUserUrl)
+      const loadUserUrl = url + this.mode + '?' + queryFind + '=' + val
       this.$axios(loadUserUrl)
         .then((response) => {
-          this.people = response.data['hydra:member']
+          const data = response.data['hydra:member']
+          this.people = data
         })
         .catch((err) => {
           console.log(err)
@@ -118,29 +141,46 @@ export default {
       const config = {
         headers: { 'Content-Type': 'application/merge-patch+json' }
       }
-      const friendListClone = JSON.parse(JSON.stringify(this.userInfo.friendList))
-      console.log(friendListClone)
-      friendListClone.push({
-        id: item.id,
-        username: item.username,
-        name: item.name,
-        lastname: item.lastname,
-        profileUrl: item.profileUrl
-      })
-      const info = {
-        friendList: friendListClone
+      if (this.mode === 'users') {
+        const friendListClone = JSON.parse(JSON.stringify(this.userInfo.FriendList))
+        // eslint-disable-next-line no-undef
+        friendListClone.push(item)
+        const info = {
+          // eslint-disable-next-line no-undef
+          FriendList: friendListClone
+        }
+        await this.$axios.$patch(url + 'users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
+          console.log(e)
+        })
+      } else {
+        const groupListClone = JSON.parse(JSON.stringify(this.userInfo.GroupList))
+        // eslint-disable-next-line no-undef
+        groupListClone.push(item)
+        const info = {
+          // eslint-disable-next-line no-undef
+          GroupList: groupListClone
+        }
+        await this.$axios.$patch(url + 'users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
+          console.log(e)
+        })
       }
-      await this.$axios.$patch(url + 'users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
-        console.log(e)
-      })
     },
     remove (item) {
-      this.friend = ''
+      this.friend = {}
     }
   }
 }
 </script>
 
-<style scoped>
-
+<style lang="scss">
+  @mixin random-bgr(){
+    background: rgba(random(255), random(255), random(255), 0.2);
+  }
+  @for $i from 0 to 12 {
+    .user_tag:nth-child(#{$i}){
+      display: inline-block;
+      padding: 3px;
+      @include random-bgr();
+    }
+  }
 </style>

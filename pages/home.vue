@@ -246,7 +246,6 @@ export default {
     },
     connection: null,
     group: {},
-    pallete: false,
     username: '',
     valid: true,
     users: [],
@@ -254,7 +253,10 @@ export default {
     input: null,
     nonce: 0,
     cards: ['Today', 'Yesterday'],
-    drawer: null
+    drawer: null,
+    // pallete
+    pallete: false,
+    toggle_multiple: []
   }),
   computed: {
     timeline () {
@@ -298,7 +300,6 @@ export default {
   },
   mounted () {
     // #TODO: Refactor mounted hook, put methods to Vuex Actions
-
     this.group = this.$store.getters['groups/getCurrentGroup']
     if (process.browser) {
       this.username = localStorage.username
@@ -324,7 +325,6 @@ export default {
     }
     // END SOCKET CONFIG
     this.$store.dispatch('user/getUserInfo').then(() => {
-      console.log(this.$store.getters['user/getUser'])
       this.userInfo = this.$store.getters['user/getUser']
     })
   }
