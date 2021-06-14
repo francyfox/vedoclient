@@ -66,6 +66,7 @@
 <script>
 const url = 'http://127.0.0.1:8000/api/'
 export default {
+  // TODO: DELETED dialog note
   // TODO: <v-autocomplete> :item-text  && :item-value not working with dynamic attributes
   // TODO: Put userInfo and API URL to store, and set 1 search component
   name: 'searchRoom',
@@ -74,7 +75,7 @@ export default {
     userInfo: Object
   },
   data: () => ({
-    inputType: 'users',
+    inputType: 'username',
     descriptionLimit: 60,
     autoUpdate: true,
     friend: null,

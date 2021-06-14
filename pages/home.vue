@@ -204,20 +204,31 @@
               :key="event.id"
               class="mb-4"
               color="pink"
-              small
+              large
             >
-              <v-row justify="space-between" class="message">
-                <v-col
-                  cols="7"
-                >
-                  <strong>-- {{ event.user }} // </strong>{{ event.text }}
-                </v-col>
-                <v-col
-                  class="text-right"
-                  cols="5"
-                  v-text="event.time"
-                />
-              </v-row>
+              <template v-if="userInfo.username == event.user" v-slot:icon>
+                <v-avatar style="background: #1b1b1b;" size="50">
+                  <img :src="userInfo.profileUrl">
+                </v-avatar>
+                <span class="caption user_tag">{{ event.user }}</span>
+              </template>
+              <template v-else v-slot:icon>
+                <span class="caption user_tag">{{ event.user }}</span>
+              </template>
+              <v-card class="elevation-2">
+                <v-row justify="space-between" class="message">
+                  <v-col
+                    cols="7"
+                  >
+                    {{ event.text }}
+                  </v-col>
+                  <v-col
+                    class="text-right"
+                    cols="5"
+                    v-text="event.time"
+                  />
+                </v-row>
+              </v-card>
             </v-timeline-item>
           </v-slide-x-transition>
         </v-timeline>
@@ -300,28 +311,31 @@ export default {
   },
   mounted () {
     // #TODO: Refactor mounted hook, put methods to Vuex Actions
-    this.group = this.$store.getters['groups/getCurrentGroup']
     if (process.browser) {
       this.username = localStorage.username
       this.clientInformation.user = localStorage.username
     }
     // STORAGE
-
-    this.connection = new WebSocket('ws://localhost:8080')
-    this.connection.onopen = function (e) {}
-    this.connection.onmessage = (e) => {
-      const data = JSON.parse(e.data)
-      this.events.push({
-        id: data.id,
-        user: data.user,
-        time: data.time,
-        text: data.message
-      })
-      this.timeline()
-    }
-    this.connection.onerror = function (e) {
-      alert('Error: something went wrong with the socket.')
-      console.error(e)
+    this.group = this.$store.getters['groups/getCurrentGroup']
+    // .replace(/ /g, '_').toLowerCase()
+    if (this.group) {
+      this.connection = new WebSocket('ws://localhost:8080/' + this.group.name.replace(/ /g, '_').toLowerCase())
+      console.log(this.connection)
+      this.connection.onopen = function (e) {}
+      this.connection.onmessage = (e) => {
+        const data = JSON.parse(e.data)
+        this.events.push({
+          id: data.id,
+          user: data.user,
+          time: data.time,
+          text: data.message
+        })
+        this.timeline()
+      }
+      this.connection.onerror = function (e) {
+        alert('Error: something went wrong with the socket.')
+        console.error(e)
+      }
     }
     // END SOCKET CONFIG
     this.$store.dispatch('user/getUserInfo').then(() => {
@@ -381,10 +395,8 @@ export default {
   .v-main__wrap .container, .v-timeline{
     height: 100%;
   }
-  .message{
-    background: #5c5c5c1f;
-    border-radius: 3px;
-    box-shadow: 0 3px 1px slateblue;
+  .message .col {
+    padding: 20px 30px;
   }
   .menu-but{
     width: 100% !important;
@@ -400,5 +412,9 @@ export default {
     padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
+  }
+  .caption{
+    bottom: -30px;
+    position: absolute;
   }
 </style>
