@@ -238,8 +238,8 @@
 </template>
 
 <script>
-import groups from '../components/groups'
-import UserPanel from '../components/userPanel'
+import groups from '../../components/groups'
+import UserPanel from '../../components/userPanel'
 
 export default {
   components: {
@@ -275,6 +275,42 @@ export default {
     }
   },
   methods: {
+    joinToRoom (name) {
+      const wsRouter = name.replace(/ /g, '_').toLowerCase()
+      let CurrentRouter = ''
+      if (this.connection !== null) {
+        const CurrentRouterParts = this.connection.url.split('/')
+        CurrentRouter = CurrentRouterParts.pop()
+      }
+      this.clientInformation.room = this.group.id
+      this.events = []
+      // eslint-disable-next-line eqeqeq
+      if (CurrentRouter == wsRouter) {
+        console.log('close')
+      }
+      this.connection.close()
+      this.connection = {}
+      this.connection = new WebSocket('ws://localhost:8080/' + wsRouter)
+      this.connection.onopen = function (e) {
+        console.log(e)
+      }
+      this.connection.onerror = function (e) {
+        alert('Error: something went wrong with the socket.')
+        console.error(e)
+      }
+      this.connection.onmessage = (e) => {
+        console.log(e)
+        const data = JSON.parse(e.data)
+        this.events.push({
+          id: data.id,
+          user: data.user,
+          time: data.time,
+          text: data.message
+        })
+        this.events.slice().reverse()
+      }
+      console.log('CONNECTION', this.connection.url)
+    },
     appendMessage (username, message) {
       const timeEvent = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
         return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
@@ -287,7 +323,6 @@ export default {
         // eslint-disable-next-line no-unused-vars
         from = this.clientInformation.uuid
       }
-
       // Append List Item
       this.events.push({
         id: this.nonce,
@@ -309,8 +344,7 @@ export default {
       this.input = null
     }
   },
-  mounted () {
-    // #TODO: Refactor mounted hook, put methods to Vuex Actions
+  created () {
     if (process.browser) {
       this.username = localStorage.username
       this.clientInformation.user = localStorage.username
@@ -318,11 +352,14 @@ export default {
     // STORAGE
     this.group = this.$store.getters['groups/getCurrentGroup']
     // .replace(/ /g, '_').toLowerCase()
-    if (this.group) {
-      this.connection = new WebSocket('ws://localhost:8080/' + this.group.name.replace(/ /g, '_').toLowerCase())
-      console.log(this.connection)
+    // END SOCKET CONFIG
+    this.$store.dispatch('user/getUserInfo').then(() => {
+      this.userInfo = this.$store.getters['user/getUser']
+      const WSrouter = this.userInfo.GroupList['0'].groupName.replace(/ /g, '_').toLowerCase()
+      this.connection = new WebSocket('ws://localhost:8080/' + WSrouter)
       this.connection.onopen = function (e) {}
       this.connection.onmessage = (e) => {
+        console.log(e)
         const data = JSON.parse(e.data)
         this.events.push({
           id: data.id,
@@ -330,16 +367,11 @@ export default {
           time: data.time,
           text: data.message
         })
-        this.timeline()
       }
       this.connection.onerror = function (e) {
         alert('Error: something went wrong with the socket.')
         console.error(e)
       }
-    }
-    // END SOCKET CONFIG
-    this.$store.dispatch('user/getUserInfo').then(() => {
-      this.userInfo = this.$store.getters['user/getUser']
     })
   }
 }

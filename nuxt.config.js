@@ -43,11 +43,25 @@ export default {
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {},
+  axios: {
+    baseURL: 'http://127.0.0.1:8000/api/'
+  },
+
+  publicRuntimeConfig: {
+    axios: {
+      browserBaseURL: process.env.BROWSER_BASE_URL
+    }
+  },
+
+  privateRuntimeConfig: {
+    axios: {
+      baseURL: process.env.BASE_URL
+    }
+  },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
-    defaultAssets: {icons: 'fa' },
+    defaultAssets: { icons: 'fa' },
     customVariables: ['~/assets/variables.scss'],
     theme: {
       dark: true,
@@ -63,9 +77,6 @@ export default {
         },
       },
     },
-  },
-  globals: {
-    serverUrl: 'http://127.0.0.1:8000/api'
   },
   extend(config, ctx) {
     if(ctx.idDev) {

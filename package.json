@@ -16,6 +16,7 @@
     "core-js": "^3.9.1",
     "event-source-polyfill": "^1.0.24",
     "eventsource-polyfill": "^0.9.6",
+    "jwt-decode": "^3.1.2",
     "nuxt": "^2.15.3",
     "vee-validate": "^4.4.0-alpha.2",
     "vuelidate": "^0.7.6"

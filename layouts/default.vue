@@ -38,3 +38,14 @@ export default {
   }
 }
 </script>
+
+<style lang="scss">
+  @import url('https://fonts.googleapis.com/css2?family=Rosarivo&display=swap');
+  .v-parallax__image {
+    max-width: 100vw;
+    opacity: 0.2 !important;
+  }
+  .v-main__wrap > .container{
+    max-width: 100% !important;
+  }
+</style>

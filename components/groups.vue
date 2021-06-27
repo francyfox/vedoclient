@@ -33,16 +33,6 @@
                 v-model="imageUrl"
                 label="Group Image URL"
               />
-              <v-select
-                v-model="userSelect"
-                :items="users"
-                label="Add users to group"
-                data-vv-name="select"
-                multiple
-                chips
-                hint="Selected users will join automatically"
-                persistent-hint
-              />
               <v-checkbox
                 v-model="roleplay"
                 :label="`Enable RolePlay mode`"
@@ -97,7 +87,7 @@
           <v-list-item
             v-for="group in userInfo.GroupList"
             :key="group.index"
-            @click="changeGroup"
+            @click="changeGroup(group.groupName)"
           >
             <div class="mx-3">
               <v-badge
@@ -164,8 +154,18 @@ export default {
     //   })
   },
   methods: {
-    changeGroup () {
-      this.$store.commit('groups/set_current', { id: this.selectedGroup, name: this.userInfo.GroupList[this.selectedGroup].groupName })
+    changeGroup (name) {
+      try {
+        this.$store.commit('groups/set_current', { id: this.selectedGroup, name: this.userInfo.GroupList[this.selectedGroup].groupName })
+        this.$parent.$parent.$parent.joinToRoom(name)
+        history.pushState(
+          {},
+          null,
+          this.$route.path + '#' + encodeURIComponent(name)
+        )
+      } catch (e) {
+        console.log(e)
+      }
     },
     addGroup () {
       const app = this

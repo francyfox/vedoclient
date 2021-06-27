@@ -280,8 +280,6 @@ export default {
     validReg: false,
     validAuth: false,
     tabs: null,
-    authUser: '',
-    authPass: '',
     username: '',
     email: '',
     name: '',
@@ -340,19 +338,7 @@ export default {
         childs: this.childs,
         country: 'Vaflandia',
         like: JSON.stringify(this.like),
-        dislike: JSON.stringify(this.like),
-        disc: {
-          CorrelationCoefficent: 0,
-          Dominance: 0,
-          Influence: 0,
-          Steadness: 0,
-          Conscient: 0,
-          correlationCoefficent: 0,
-          dominance: 0,
-          influence: 0,
-          steadness: 0,
-          conscient: 0
-        }
+        dislike: JSON.stringify(this.like)
       }
 
       if (this.username) {
