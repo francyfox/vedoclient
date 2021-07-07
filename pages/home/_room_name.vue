@@ -138,16 +138,6 @@
         </v-tabs>
       </div>
     </v-app-bar>
-    <v-system-bar app>
-      <v-spacer />
-
-      <v-icon>mdi-square</v-icon>
-
-      <v-icon>mdi-circle</v-icon>
-
-      <v-icon>mdi-triangle</v-icon>
-    </v-system-bar>
-
     <v-navigation-drawer
       width="320"
       v-model="drawer"
@@ -159,8 +149,18 @@
       app
       right
     >
-      <user-panel :username="username" :userInfo="userInfo"></user-panel>
+      <user-panel
+        :user="user"
+        :userInfo="userInfo"
+        @setLog="onLog"
+      />
     </v-navigation-drawer>
+    <logbar
+      app
+      :status="log.status"
+      :data="log.data"
+      v-if="forceReload"
+    />
     <v-main>
       <v-container>
         <v-timeline
@@ -238,15 +238,22 @@
 </template>
 
 <script>
+import jwtDecode from 'jwt-decode'
 import groups from '../../components/groups'
 import UserPanel from '../../components/userPanel'
+import logbar from '../../components/logbar'
 
 export default {
   components: {
+    logbar,
     UserPanel,
     groups
   },
   data: () => ({
+    forceReload: true,
+    log: {},
+    user: {},
+    // OLD
     userInfo: {},
     clientInformation: {
       room: 0,
@@ -269,151 +276,34 @@ export default {
     pallete: false,
     toggle_multiple: []
   }),
+  created () {
+    if (process.browser) {
+      this.user = jwtDecode(localStorage.token)
+    }
+  },
   computed: {
     timeline () {
       return this.events.slice().reverse()
     }
   },
   methods: {
-    joinToRoom (name) {
-      const wsRouter = name.replace(/ /g, '_').toLowerCase()
-      let CurrentRouter = ''
-      if (this.connection !== null) {
-        const CurrentRouterParts = this.connection.url.split('/')
-        CurrentRouter = CurrentRouterParts.pop()
-      }
-      this.clientInformation.room = this.group.id
-      this.events = []
-      // eslint-disable-next-line eqeqeq
-      if (CurrentRouter == wsRouter) {
-        console.log('close')
-      }
-      this.connection.close()
-      this.connection = {}
-      this.connection = new WebSocket('ws://localhost:8080/' + wsRouter)
-      this.connection.onopen = function (e) {
-        console.log(e)
-      }
-      this.connection.onerror = function (e) {
-        alert('Error: something went wrong with the socket.')
-        console.error(e)
-      }
-      this.connection.onmessage = (e) => {
-        console.log(e)
-        const data = JSON.parse(e.data)
-        this.events.push({
-          id: data.id,
-          user: data.user,
-          time: data.time,
-          text: data.message
-        })
-        this.events.slice().reverse()
-      }
-      console.log('CONNECTION', this.connection.url)
-    },
-    appendMessage (username, message) {
-      const timeEvent = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
-        return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
-      })
-      let from
-
-      if (username === this.clientInformation.uuid) {
-        from = 'me'
-      } else {
-        // eslint-disable-next-line no-unused-vars
-        from = this.clientInformation.uuid
-      }
-      // Append List Item
-      this.events.push({
-        id: this.nonce,
-        user: this.username,
-        text: this.input,
-        time: timeEvent
-      })
-    },
-    comment () {
-      this.clientInformation.id = this.nonce++
-      this.clientInformation.time = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
-        return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
-      })
-      this.clientInformation.message = this.input
-      // Send info as JSON
-      this.connection.send(JSON.stringify(this.clientInformation))
-      // Add my own message to the list
-      this.appendMessage(this.clientInformation.uuid, this.clientInformation.message)
-      this.input = null
+    onLog (data) {
+      this.forceReload = false
+      this.forceReload = true
+      console.log(data.data)
+      this.log.status = data.status
+      this.log.data = data.data
     }
   },
-  created () {
+  mounted () {
     if (process.browser) {
-      this.username = localStorage.username
-      this.clientInformation.user = localStorage.username
+      this.user = jwtDecode(localStorage.token)
     }
-    // STORAGE
-    this.group = this.$store.getters['groups/getCurrentGroup']
-    // .replace(/ /g, '_').toLowerCase()
-    // END SOCKET CONFIG
-    this.$store.dispatch('user/getUserInfo').then(() => {
-      this.userInfo = this.$store.getters['user/getUser']
-      const WSrouter = this.userInfo.GroupList['0'].groupName.replace(/ /g, '_').toLowerCase()
-      this.connection = new WebSocket('ws://localhost:8080/' + WSrouter)
-      this.connection.onopen = function (e) {}
-      this.connection.onmessage = (e) => {
-        console.log(e)
-        const data = JSON.parse(e.data)
-        this.events.push({
-          id: data.id,
-          user: data.user,
-          time: data.time,
-          text: data.message
-        })
-      }
-      this.connection.onerror = function (e) {
-        alert('Error: something went wrong with the socket.')
-        console.error(e)
-      }
-    })
   }
 }
 </script>
 
 <style lang="scss">
-  html::-webkit-scrollbar-track
-  {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-    border-radius: 1px;
-    background-color: #1e1e1e;
-  }
-  html::-webkit-scrollbar
-  {
-    width: 12px;
-    background-color: #1e1e1e;
-  }
-  html::-webkit-scrollbar-thumb
-  {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-    background-color: #2196f3;
-  }
-  .v-main__wrap > .container > .container > .container{
-    &::-webkit-scrollbar-track
-    {
-      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-      border-radius: 1px;
-      background-color: #1e1e1e;
-    }
-    &::-webkit-scrollbar
-    {
-      width: 12px;
-      background-color: #1e1e1e;
-    }
-    &::-webkit-scrollbar-thumb
-    {
-      border-radius: 10px;
-      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-      background-color: #97ae4a;
-    }
-  }
   .tab-icons i{
     margin-right: 10px;
   }

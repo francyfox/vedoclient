@@ -41,6 +41,43 @@ export default {
 
 <style lang="scss">
   @import url('https://fonts.googleapis.com/css2?family=Rosarivo&display=swap');
+
+  html::-webkit-scrollbar-track, .v-dialog--fullscreen::-webkit-scrollbar-track
+  {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 1px;
+    background-color: #1e1e1e;
+  }
+  html::-webkit-scrollbar, .v-dialog--fullscreen::-webkit-scrollbar
+  {
+    width: 12px;
+    background-color: #1e1e1e;
+  }
+  html::-webkit-scrollbar-thumb, .v-dialog--fullscreen::-webkit-scrollbar-thumb
+  {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #2196f3;
+  }
+  .v-main__wrap > .container > .container > .container{
+    &::-webkit-scrollbar-track
+    {
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+      border-radius: 1px;
+      background-color: #1e1e1e;
+    }
+    &::-webkit-scrollbar
+    {
+      width: 12px;
+      background-color: #1e1e1e;
+    }
+    &::-webkit-scrollbar-thumb
+    {
+      border-radius: 10px;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+      background-color: #97ae4a;
+    }
+  }
   .v-parallax__image {
     max-width: 100vw;
     opacity: 0.2 !important;

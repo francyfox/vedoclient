@@ -1,20 +1,21 @@
 <template>
   <v-card class="p20">
     <v-form v-model="validReg" lazy-validation>
-      <div v-if="RegInfo.profileUrl" class="avatar mx-3 d-flex flex-column justify-center mt-3 mb-3">
-        <v-progress-circular
-          size="84"
-          indeterminate
-          :rotate="360"
-          :value="speed"
-          color="primary"
-        >
-          <v-avatar size="80">
-            <v-img :src="RegInfo.profileUrl" />
-          </v-avatar>
-        </v-progress-circular>
-
-      </div>
+      <v-slide-x-reverse-transition>
+        <div v-if="RegInfo.profileUrl" class="avatar mx-3 d-flex flex-column justify-center mt-3 mb-3">
+          <v-progress-circular
+            size="84"
+            indeterminate
+            :rotate="360"
+            :value="speed"
+            color="primary"
+          >
+            <v-avatar size="80">
+              <v-img :src="RegInfo.profileUrl" />
+            </v-avatar>
+          </v-progress-circular>
+        </div>
+      </v-slide-x-reverse-transition>
       <v-text-field
         v-model="RegInfo.profileUrl"
         label="Set avatar by url"
@@ -286,6 +287,15 @@ export default {
       await this.$axios
         .post('users', this.RegInfo)
         .then((response) => {
+          this.$emit('setLog', {
+            status: response.status,
+            data: response.data
+          })
+        }).catch((error) => {
+          this.$emit('setLog', {
+            status: error.response.status,
+            data: error.response.data
+          })
         })
     },
     updateTags () {

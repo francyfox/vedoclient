@@ -9,6 +9,7 @@
     append-icon="fa-search"
     filled
     chips
+    multiple
     color="blue-grey lighten-2"
     :label="mode + ' search'"
     :item-text="inputType"
@@ -64,13 +65,13 @@
 </template>
 
 <script>
-const url = 'http://127.0.0.1:8000/api/'
 export default {
   // TODO: DELETED dialog note
   // TODO: <v-autocomplete> :item-text  && :item-value not working with dynamic attributes
   // TODO: Put userInfo and API URL to store, and set 1 search component
   name: 'searchRoom',
   props: {
+    user: Object,
     mode: String,
     userInfo: Object
   },
@@ -78,7 +79,7 @@ export default {
     inputType: 'username',
     descriptionLimit: 60,
     autoUpdate: true,
-    friend: null,
+    friend: [],
     isLoading: false,
     people: [],
     search: null
@@ -125,7 +126,7 @@ export default {
         queryFind = 'groupName'
       }
 
-      const loadUserUrl = url + this.mode + '?' + queryFind + '=' + val
+      const loadUserUrl = this.mode + '?' + queryFind + '=' + val
       this.$axios(loadUserUrl)
         .then((response) => {
           const data = response.data['hydra:member']
@@ -143,15 +144,19 @@ export default {
         headers: { 'Content-Type': 'application/merge-patch+json' }
       }
       if (this.mode === 'users') {
-        const friendListClone = JSON.parse(JSON.stringify(this.userInfo.FriendList))
-        // eslint-disable-next-line no-undef
-        friendListClone.push(item)
-        const info = {
-          // eslint-disable-next-line no-undef
-          FriendList: friendListClone
-        }
-        await this.$axios.$patch(url + 'users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
-          console.log(e)
+        await this.$axios.$post('joinTo/user', {
+          list: this.people,
+          userID: this.user.id
+        }).then((response) => {
+          this.$parent.$emit('setLog', {
+            status: response.status,
+            data: response.data
+          })
+        }).catch((error) => {
+          this.$parent.$emit('setLog', {
+            status: error.response.status,
+            data: error.response.data
+          })
         })
       } else {
         const groupListClone = JSON.parse(JSON.stringify(this.userInfo.GroupList))
@@ -161,7 +166,7 @@ export default {
           // eslint-disable-next-line no-undef
           GroupList: groupListClone
         }
-        await this.$axios.$patch(url + 'users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
+        await this.$axios.$patch('users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
           console.log(e)
         })
       }

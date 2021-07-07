@@ -62,7 +62,7 @@ export default {
             data: jwtDecode(response.data)
           })
           localStorage.setItem('token', response.data)
-          // this.$router.push({ path: '/home' })
+          this.$router.push({ path: '/home' })
         })
         .catch((error) => {
           // eslint-disable-next-line eqeqeq
