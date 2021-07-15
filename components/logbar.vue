@@ -38,26 +38,33 @@
           </v-btn>
         </v-app-bar>
         <v-card-text class="mt-10">
-          <v-expansion-panels focusable>
-            <v-expansion-panel>
-              <v-expansion-panel-header>/****DUMP DATA****/</v-expansion-panel-header>
-              <v-expansion-panel-content>
+          <v-row>
+            <v-col>
+              <v-card-title>///___STATUS_LOG___///</v-card-title>
+              <v-card
+                class="pa-2"
+                outlined
+                tile
+              >
+                <dump
+                  :data="data"
+                />
+              </v-card>
+            </v-col>
+            <v-col>
+              <v-card-title>///___DUMP___///</v-card-title>
+              <v-card
+                class="pa-2"
+                outlined
+                tile
+              >
                 <dump
                   :data="dump"
                   json="true"
                 />
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-            <v-expansion-panel>
-              <v-expansion-panel-header>/****ERROR DATA****/</v-expansion-panel-header>
-              <v-expansion-panel-content>
-                <dump
-                  :data="data"
-                />
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-expansion-panels>
-
+              </v-card>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-app>
     </v-dialog>
@@ -90,7 +97,7 @@
 import dump from './dump'
 
 export default {
-  name: 'logbar',
+  name: 'Logbar',
   props: {
     data: String,
     status: Number

@@ -140,9 +140,9 @@ export default {
   },
   methods: {
     async patchList (item) {
-      const config = {
-        headers: { 'Content-Type': 'application/merge-patch+json' }
-      }
+      // const config = {
+      //   headers: { 'Content-Type': 'application/merge-patch+json' }
+      // }
       if (this.mode === 'users') {
         await this.$axios.$post('joinTo/user', {
           list: this.people,
@@ -159,15 +159,19 @@ export default {
           })
         })
       } else {
-        const groupListClone = JSON.parse(JSON.stringify(this.userInfo.GroupList))
-        // eslint-disable-next-line no-undef
-        groupListClone.push(item)
-        const info = {
-          // eslint-disable-next-line no-undef
-          GroupList: groupListClone
-        }
-        await this.$axios.$patch('users/' + this.userInfo.id, JSON.stringify(info), config).catch((e) => {
-          console.log(e)
+        await this.$axios.$post('joinTo/group', {
+          list: this.people,
+          userID: this.user.id
+        }).then((response) => {
+          this.$parent.$emit('setLog', {
+            status: response.status,
+            data: response.data
+          })
+        }).catch((error) => {
+          this.$parent.$emit('setLog', {
+            status: error.response.status,
+            data: error.response.data
+          })
         })
       }
     },

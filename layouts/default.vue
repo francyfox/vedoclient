@@ -5,6 +5,22 @@
         <nuxt />
       </v-container>
     </v-main>
+    <v-snackbar
+      v-model="snackbar"
+      :timeout="timeout"
+      centered
+    >
+      <v-alert
+        text
+        prominent
+        type="error"
+        outlined
+        border="left"
+        icon="fa-skull-crossbones"
+      >
+        Vedo Server is dead. Pls, call 911, Antoha its murder, possibly criminal.
+      </v-alert>
+    </v-snackbar>
     <v-footer app>
       <span>&copy; Vedofair {{ new Date().getFullYear() }}</span>
     </v-footer>
@@ -15,6 +31,8 @@
 export default {
   data () {
     return {
+      snackbar: false,
+      timeout: 9999,
       clipped: false,
       drawer: false,
       fixed: false,
@@ -35,6 +53,14 @@ export default {
       rightDrawer: false,
       title: 'Vuetify.js'
     }
+  },
+  mounted () {
+    this.$axios.get('/').then(() => {
+      this.timeout = 0
+    }).catch(() => {
+      this.timeout = 9999
+      this.snackbar = true
+    })
   }
 }
 </script>

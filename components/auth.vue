@@ -22,6 +22,7 @@
         :disabled="!validAuth"
         class="mr-4"
         @click="submitAuth"
+        @keydown.enter="submitAuth"
       >
         LOGIN
       </v-btn>

@@ -1,6 +1,49 @@
 <template>
   <div>
-    <search-room :userInfo="userInfo" mode="groups"></search-room>
+    <v-sheet
+        color="grey darken-4"
+        class="pa-4"
+    >
+      <v-row>
+        <div class="mx-3 d-flex flex-column justify-center">
+          <v-badge
+              bordered
+              bottom
+              color="green accent-4"
+              offset-x="15"
+              offset-y="15"
+          >
+            <v-avatar size="50">
+              <v-img src="https://www.spletnik.ru/img/2017/01/ayna/20170131-bloom-anons.jpg"/>
+            </v-avatar>
+          </v-badge>
+        </div>
+        <v-list-item-content>
+          <v-list-item-title class="title">
+            Group name
+          </v-list-item-title>
+          <v-list-item-subtitle>
+            Tags
+          </v-list-item-subtitle>
+        </v-list-item-content>
+      </v-row>
+    </v-sheet>
+    <v-tabs>
+      <v-tab>
+        <v-icon>fa-house-user</v-icon>
+      </v-tab>
+      <v-tab>
+        <v-icon>fa-tools</v-icon>
+      </v-tab>
+      <v-tab>
+        <v-icon>fa-search</v-icon>
+      </v-tab>
+    </v-tabs>
+    <search-room
+      :user="user"
+      :userInfo="userInfo"
+      mode="groups"
+    />
     <v-dialog
       v-model="dialog"
       persistent
@@ -51,7 +94,7 @@
               </v-radio-group>
             </v-form>
             <v-avatar size="120" style="margin-left: 20px">
-              <v-img :src="imageUrl"/>
+              <v-img :src="imageUrl" />
             </v-avatar>
           </v-row>
         </v-card-title>
@@ -85,25 +128,17 @@
           active-class="activeGroup"
         >
           <v-list-item
-            v-for="group in userInfo.GroupList"
+            v-for="group in myGroups"
             :key="group.index"
             @click="changeGroup(group.groupName)"
           >
             <div class="mx-3">
-              <v-badge
-                bordered
-                bottom
-                color="green accent-4"
-                offset-x="15"
-                offset-y="15"
-              >
-                <div class="avatar">
-                  <v-icon>fa-circle</v-icon>
-                  <v-avatar size="50">
-                    <v-img :src="group.imageUrl" />
-                  </v-avatar>
-                </div>
-              </v-badge>
+              <div class="avatar">
+                <v-icon>fa-circle</v-icon>
+                <v-avatar size="50">
+                  <v-img :src="group.imageUrl" />
+                </v-avatar>
+              </div>
             </div>
             <v-list-item-content>
               <v-list-item-title class="title">
@@ -124,11 +159,13 @@
 
 <script>
 export default {
-  name: 'Groups',
+  name: 'groups',
   props: {
-    userInfo: Object
+    user: Object,
+    userinfo: Object
   },
   data: () => ({
+    groupList: [],
     chatRoomName: '',
     imageUrl: '',
     selectedGroup: 0,
@@ -139,37 +176,31 @@ export default {
     dialog: false,
     groupId: 0
   }),
-  mounted () {
-    // this.$axios
-    //   .get('http://127.0.0.1:8000/api/groups')
-    //   .then((response) => {
-    //     const groups = (Object.entries(response.data['hydra:member']))
-    //     groups.forEach(function (item) {
-    //       item.shift()
-    //     })
-    //     this.$data.groups_list = groups
-    //     this.currentGroup = this.groups_list[this.selectedGroup][0].groupName
-    //     const newOption = { id: this.selectedGroup, name: this.currentGroup }
-    //     this.$store.commit('groups/set_current', newOption)
-    //   })
+  computed: {
+    myGroups () {
+      if (this.user.users_groups) {
+        return JSON.parse(this.user.users_groups)
+      } else {
+        return {}
+      }
+    }
   },
   methods: {
     changeGroup (name) {
-      try {
-        this.$store.commit('groups/set_current', { id: this.selectedGroup, name: this.userInfo.GroupList[this.selectedGroup].groupName })
-        this.$parent.$parent.$parent.joinToRoom(name)
-        history.pushState(
-          {},
-          null,
-          this.$route.path + '#' + encodeURIComponent(name)
-        )
-      } catch (e) {
-        console.log(e)
-      }
+      // try {
+      //   this.$store.commit('groups/set_current', { id: this.selectedGroup, name: this.userInfo.GroupList[this.selectedGroup].groupName })
+      //   this.$parent.$parent.$parent.joinToRoom(name)
+      //   history.pushState(
+      //     {},
+      //     null,
+      //     this.$route.path + '#' + encodeURIComponent(name)
+      //   )
+      // } catch (e) {
+      //   console.log(e)
+      // }
     },
     addGroup () {
-      const app = this
-      const groupinfo = {
+      const groupInfo = {
         groupName: this.chatRoomName,
         users: this.$data.userSelect,
         security: JSON.parse(this.$data.security),
@@ -178,10 +209,10 @@ export default {
         imageUrl: this.imageUrl
       }
       this.$axios
-        .post('http://127.0.0.1:8000/api/groups', groupinfo)
-        .then(function (response) {
-          app.groupId = response.data.id
-          app.groups_list.push(
+        .post('http://127.0.0.1:8000/api/groups', groupInfo)
+        .then((response) => {
+          this.groupId = response.data.id
+          this.groupList.push(
             {
               id: response.data.id,
               groupName: response.data.groupName,

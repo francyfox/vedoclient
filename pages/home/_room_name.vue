@@ -1,13 +1,6 @@
 <template>
   <v-app id="inspire">
     <v-app-bar app>
-      <div class="mx-3">
-        <v-list-item-title>
-          {{ group.name }}
-          <span class="amber--text">group number</span>
-          <span class="amber--text"> {{ group.id }} </span>
-        </v-list-item-title>
-      </div>
       <v-spacer></v-spacer>
       <template>
         <v-toolbar dense class="tools">
@@ -121,29 +114,17 @@
           </template>
         </v-toolbar>
       </template>
-      <div class="mx-3">
-        <v-tabs class="tab-icons">
-          <v-tab>
-            <v-icon>fa-house-user</v-icon>
-            Room
-          </v-tab>
-          <v-tab>
-            <v-icon>fa-tools</v-icon>
-            Edit Room
-          </v-tab>
-          <v-tab>
-            <v-icon>fa-search</v-icon>
-            FIND
-          </v-tab>
-        </v-tabs>
-      </div>
     </v-app-bar>
     <v-navigation-drawer
       width="320"
       v-model="drawer"
       app
     >
-      <groups :userInfo="userInfo"/>
+      <groups
+        :user="user"
+        :userinfo="userInfo"
+        @setLog="onLog"
+      />
     </v-navigation-drawer>
     <v-navigation-drawer
       app
@@ -151,7 +132,6 @@
     >
       <user-panel
         :user="user"
-        :userInfo="userInfo"
         @setLog="onLog"
       />
     </v-navigation-drawer>
@@ -182,13 +162,11 @@
               flat
               label="Leave a comment..."
               solo
-              @keydown.enter="comment"
             >
               <template #append>
                 <v-btn
                   class="mx-0"
                   depressed
-                  @click="comment"
                 >
                   Post
                 </v-btn>
@@ -239,15 +217,15 @@
 
 <script>
 import jwtDecode from 'jwt-decode'
-import groups from '../../components/groups'
+import Groups from '../../components/groups'
 import UserPanel from '../../components/userPanel'
-import logbar from '../../components/logbar'
+import Logbar from '../../components/logbar'
 
 export default {
   components: {
-    logbar,
+    Logbar,
     UserPanel,
-    groups
+    Groups
   },
   data: () => ({
     forceReload: true,

@@ -10,7 +10,7 @@
             bordered
             bottom
             color="green accent-4"
-            offset-x="1 5"
+            offset-x="15"
             offset-y="15"
           >
             <v-avatar size="50">
@@ -36,7 +36,6 @@
         <v-icon>fa-user-cog</v-icon>
       </v-tab>
     </v-tabs>
-    {{ user.friends | dump }}
     <search-room
       :user="user"
       :userInfo="userInfo"
@@ -44,13 +43,21 @@
     />
     <v-list>
       <v-list-item
-        v-for="item in JSON.parse(user.friends)"
+        v-for="item in myFriends"
         :key="item.index"
         link
       >
-        <v-list-item-avatar>
-          <v-img :src="item.profileUrl" />
-        </v-list-item-avatar>
+        <v-badge
+          bordered
+          bottom
+          color="green accent-4"
+          offset-x="28"
+          offset-y="25"
+        >
+          <v-list-item-avatar>
+            <v-img :src="item.profileUrl" />
+          </v-list-item-avatar>
+        </v-badge>
         <v-list-item-content>
           <v-list-item-title>{{ item.username }}</v-list-item-title>
           <v-list-item-subtitle>{{ item.name }} {{ item.lastname }}</v-list-item-subtitle>
@@ -70,6 +77,15 @@ export default {
   props: {
     user: Object,
     userInfo: Object
+  },
+  computed: {
+    myFriends () {
+      if (this.user.friends) {
+        return JSON.parse(this.user.friends)
+      } else {
+        return {}
+      }
+    }
   }
 }
 </script>
