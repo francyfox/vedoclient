@@ -60,8 +60,8 @@
 
 <script>
 import logbar from '../components/logbar'
-import Auth from '../components/auth'
-import Registration from '../components/registration'
+import Auth from '../components/index/auth'
+import Registration from '../components/index/registration'
 
 export default {
   name: 'AuthReg',

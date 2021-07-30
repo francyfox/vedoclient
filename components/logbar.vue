@@ -107,7 +107,7 @@ export default {
   },
   data () {
     return {
-      dump: 'No dump data',
+      dump: null,
       show: false,
       dialog: false
     }

@@ -1,7 +1,7 @@
 <template>
   <div class="data-dump">
     <div class="data-dump__label">{{ typeof data }}</div>
-    <pre v-if="json" class="data-dump__pre language-json">
+    <pre v-if="json && data" class="data-dump__pre language-json">
       <code>{{ JSON.parse(data) }}</code>
     </pre>
     <pre v-else class="data-dump__pre language-json">
@@ -17,6 +17,14 @@ import 'prismjs/components/prism-json'
 export default {
   name: 'dump',
   props: ['data', 'json'],
+  computed: {
+    ShowData () {
+      if (this.data) {
+        return
+      }
+      return null
+    }
+  },
   mounted () {
     Prism.highlightAll()
   }

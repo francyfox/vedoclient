@@ -17,12 +17,12 @@
         required
         counter
         @click:append="show1 = !show1"
+        @keydown.enter="submitAuth"
       />
       <v-btn
         :disabled="!validAuth"
         class="mr-4"
         @click="submitAuth"
-        @keydown.enter="submitAuth"
       >
         LOGIN
       </v-btn>

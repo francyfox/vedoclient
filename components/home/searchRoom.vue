@@ -25,7 +25,7 @@
         @click:close="remove(data.item)"
       >
         <v-avatar left>
-          <v-img :src="data.item.profileUrl || data.item.imageUrl" />
+          <v-img :src="data.item.profileUrl" />
         </v-avatar>
         {{ data.item.username || data.item.groupName }}
         <v-btn
@@ -66,14 +66,10 @@
 
 <script>
 export default {
-  // TODO: DELETED dialog note
-  // TODO: <v-autocomplete> :item-text  && :item-value not working with dynamic attributes
-  // TODO: Put userInfo and API URL to store, and set 1 search component
   name: 'searchRoom',
   props: {
     user: Object,
-    mode: String,
-    userInfo: Object
+    mode: String
   },
   data: () => ({
     inputType: 'username',

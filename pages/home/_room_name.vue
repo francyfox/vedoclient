@@ -122,8 +122,8 @@
     >
       <groups
         :user="user"
-        :userinfo="userInfo"
         @setLog="onLog"
+        @setRoom="onRoom"
       />
     </v-navigation-drawer>
     <v-navigation-drawer
@@ -162,53 +162,23 @@
               flat
               label="Leave a comment..."
               solo
+              @keydown.enter="comment"
             >
               <template #append>
                 <v-btn
                   class="mx-0"
                   depressed
+                  @click="comment"
                 >
                   Post
                 </v-btn>
               </template>
             </v-text-field>
           </v-timeline-item>
-
-          <v-slide-x-transition
-            group
-          >
-            <v-timeline-item
-              v-for="event in timeline"
-              :key="event.id"
-              class="mb-4"
-              color="pink"
-              large
-            >
-              <template v-if="userInfo.username == event.user" v-slot:icon>
-                <v-avatar style="background: #1b1b1b;" size="50">
-                  <img :src="userInfo.profileUrl">
-                </v-avatar>
-                <span class="caption user_tag">{{ event.user }}</span>
-              </template>
-              <template v-else v-slot:icon>
-                <span class="caption user_tag">{{ event.user }}</span>
-              </template>
-              <v-card class="elevation-2">
-                <v-row justify="space-between" class="message">
-                  <v-col
-                    cols="7"
-                  >
-                    {{ event.text }}
-                  </v-col>
-                  <v-col
-                    class="text-right"
-                    cols="5"
-                    v-text="event.time"
-                  />
-                </v-row>
-              </v-card>
-            </v-timeline-item>
-          </v-slide-x-transition>
+          <event-timeline
+            :user="user"
+            :events="events"
+          />
         </v-timeline>
       </v-container>
     </v-main>
@@ -216,23 +186,30 @@
 </template>
 
 <script>
+// helpers
+
 import jwtDecode from 'jwt-decode'
-import Groups from '../../components/groups'
-import UserPanel from '../../components/userPanel'
+import RoomType from '../../plugins/ChatRoomFabric/RoomType'
+
+// components
+import Groups from '../../components/home/groupspanel/groups'
+import UserPanel from '../../components/home/userpanel/userPanel'
 import Logbar from '../../components/logbar'
+import eventTimeline from '../../components/home/chat/eventTimeline'
 
 export default {
   components: {
     Logbar,
     UserPanel,
-    Groups
+    Groups,
+    eventTimeline
   },
   data: () => ({
+    selectedRoom: {},
     forceReload: true,
     log: {},
     user: {},
     // OLD
-    userInfo: {},
     clientInformation: {
       room: 0,
       id: 0,
@@ -257,23 +234,105 @@ export default {
   created () {
     if (process.browser) {
       this.user = jwtDecode(localStorage.token)
+      this.$axios.post('/refresh', {
+        id: this.user.id,
+        oldJWT: localStorage.token
+      }).then((response) => {
+        this.user = jwtDecode(response.data)
+        /*
+            TODO: Dont worry about this, its just ... i dont know,
+            idea have two tokens. Short for auth, and long for user data
+         */
+      }).catch((e) => {
+        this.$router.push({ path: '/' })
+      })
     }
   },
   computed: {
-    timeline () {
-      return this.events.slice().reverse()
+    myWSgroups () {
+      const ws = []
+      const groups = JSON.parse(this.user.users_groups)
+      groups.forEach((element) => {
+        const Room = new RoomType(element.groupName)
+        ws.push(Room.createRoom())
+      })
+      return ws
     }
   },
   methods: {
+    comment () {
+      const timeEvent = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
+        return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
+      })
+      const msgBox = {
+        uuid: new Date().getTime().toString(),
+        userID: this.user.id,
+        avatar: this.user.profileUrl,
+        user: this.user.name,
+        message: this.input,
+        time: timeEvent
+      }
+      // Append List Item
+      const wsGroup = this.myWSgroups[this.selectedRoom.Index]
+      if (wsGroup.readyState) {
+        wsGroup.send(JSON.stringify(msgBox))
+      }
+      console.log(wsGroup)
+
+      this.input = null
+    },
+    onRoom (data) {
+      this.selectedRoom = data
+    },
     onLog (data) {
       this.forceReload = false
       this.forceReload = true
-      console.log(data.data)
       this.log.status = data.status
       this.log.data = data.data
     }
   },
   mounted () {
+    const StartChat = () => {
+      this.$nextTick(() => {
+        const wsGroup = this.myWSgroups[this.selectedRoom.Index]
+        wsGroup.onopen = (e) => {
+          console.info('Connection established succesfully')
+        }
+        let isOpen = false
+        wsGroup.onmessage = (e) => {
+          if (e.data !== undefined && e.data !== null && e.data !== '[]' && e.data) {
+            let data = []
+            try {
+              data = JSON.parse(e.data)
+              console.log(data)
+            } catch (error) {
+              console.error(error)
+              return false
+            }
+
+            if (!isOpen && !data.uuid) {
+              console.warn('get history', typeof data)
+              console.log(data)
+              if (typeof data === 'object') {
+                this.events = Object.values(data)
+              } else {
+                this.events = data
+              }
+              isOpen = true
+            } else {
+              console.warn('push new message')
+              this.events.push(data)
+            }
+          }
+          // this.timeline()
+        }
+      })
+    }
+    if (this.myWSgroups.length !== 0) {
+      (async () => {
+        await StartChat()
+      })()
+    }
     if (process.browser) {
       this.user = jwtDecode(localStorage.token)
     }
