@@ -179,7 +179,11 @@ export default {
       }
     },
     currentGroup () {
-      this.$emit('setRoom', { Index: 0, isGroup: true })
+      let groupID = 0
+      if (this.user.users_groups) {
+        groupID = JSON.parse(this.user.users_groups)[0].id
+      }
+      this.$emit('setRoom', { id: groupID, Index: 0, isGroup: true })
       return this.myGroups[0]
     }
   },
@@ -191,7 +195,8 @@ export default {
         .catch(e => console.log(e))
     },
     changeGroup (index) {
-      this.$emit('setRoom', { Index: index, isGroup: true })
+      const groupID = JSON.parse(this.user.users_groups)[index].id
+      this.$emit('setRoom', { id: groupID, Index: index, isGroup: true })
       history.pushState(
         {},
         null,

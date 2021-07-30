@@ -177,7 +177,7 @@
           </v-timeline-item>
           <event-timeline
             :user="user"
-            :events="events"
+            :events="events[selectedRoom.id]"
           />
         </v-timeline>
       </v-container>
@@ -196,6 +196,21 @@ import Groups from '../../components/home/groupspanel/groups'
 import UserPanel from '../../components/home/userpanel/userPanel'
 import Logbar from '../../components/logbar'
 import eventTimeline from '../../components/home/chat/eventTimeline'
+
+function waitForSocketConnection (socket, callback) {
+  setTimeout(
+    function () {
+      if (socket.readyState === 1) {
+        console.log('Connection is made')
+        if (callback != null) {
+          callback()
+        }
+      } else {
+        console.log('wait for connection...')
+        waitForSocketConnection(socket, callback)
+      }
+    }, 1500) // wait 5 milisecond for the connection...
+}
 
 export default {
   components: {
@@ -243,6 +258,10 @@ export default {
             TODO: Dont worry about this, its just ... i dont know,
             idea have two tokens. Short for auth, and long for user data
          */
+        const groups = JSON.parse(this.user.users_groups)
+        groups.forEach((element) => {
+          this.events[element.id] = []
+        })
       }).catch((e) => {
         this.$router.push({ path: '/' })
       })
@@ -267,18 +286,18 @@ export default {
       const msgBox = {
         uuid: new Date().getTime().toString(),
         userID: this.user.id,
+        groupID: this.selectedRoom.id,
         avatar: this.user.profileUrl,
         user: this.user.name,
         message: this.input,
         time: timeEvent
       }
+      console.log(this.selectedRoom)
       // Append List Item
       const wsGroup = this.myWSgroups[this.selectedRoom.Index]
-      if (wsGroup.readyState) {
+      waitForSocketConnection(wsGroup, function () {
         wsGroup.send(JSON.stringify(msgBox))
-      }
-      console.log(wsGroup)
-
+      })
       this.input = null
     },
     onRoom (data) {
@@ -295,10 +314,12 @@ export default {
     const StartChat = () => {
       this.$nextTick(() => {
         const wsGroup = this.myWSgroups[this.selectedRoom.Index]
-        wsGroup.onopen = (e) => {
-          console.info('Connection established succesfully')
-        }
         let isOpen = false
+        if (!wsGroup.readyState) {
+          wsGroup.onopen = function (e) {
+            console.info('[open] Connection established')
+          }
+        }
         wsGroup.onmessage = (e) => {
           if (e.data !== undefined && e.data !== null && e.data !== '[]' && e.data) {
             let data = []
@@ -312,7 +333,6 @@ export default {
 
             if (!isOpen && !data.uuid) {
               console.warn('get history', typeof data)
-              console.log(data)
               if (typeof data === 'object') {
                 this.events = Object.values(data)
               } else {
@@ -321,7 +341,7 @@ export default {
               isOpen = true
             } else {
               console.warn('push new message')
-              this.events.push(data)
+              this.events[this.selectedRoom.id].push(data)
             }
           }
           // this.timeline()

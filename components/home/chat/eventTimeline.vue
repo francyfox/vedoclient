@@ -46,7 +46,11 @@ export default {
   },
   computed: {
     timeline () {
-      return this.events.slice().reverse()
+      if (this.events) {
+        return this.events.slice().reverse()
+      } else {
+        return false
+      }
     }
   }
 }
