@@ -170,6 +170,13 @@ export default {
     dialog: false,
     groupId: 0
   }),
+  created () {
+    let groupID = 0
+    if (this.user.users_groups) {
+      groupID = JSON.parse(this.user.users_groups)[0].id
+    }
+    this.$emit('setRoom', { id: groupID, Index: 0, isGroup: true })
+  },
   computed: {
     myGroups () {
       if (this.user.users_groups) {
@@ -179,11 +186,6 @@ export default {
       }
     },
     currentGroup () {
-      let groupID = 0
-      if (this.user.users_groups) {
-        groupID = JSON.parse(this.user.users_groups)[0].id
-      }
-      this.$emit('setRoom', { id: groupID, Index: 0, isGroup: true })
       return this.myGroups[0]
     }
   },

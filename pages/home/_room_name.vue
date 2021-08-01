@@ -176,8 +176,9 @@
             </v-text-field>
           </v-timeline-item>
           <event-timeline
+            :id="selectedRoom.id"
             :user="user"
-            :events="events[selectedRoom.id]"
+            :events="events"
           />
         </v-timeline>
       </v-container>
@@ -209,7 +210,7 @@ function waitForSocketConnection (socket, callback) {
         console.log('wait for connection...')
         waitForSocketConnection(socket, callback)
       }
-    }, 1500) // wait 5 milisecond for the connection...
+    }, 30) // wait 5 milisecond for the connection...
 }
 
 export default {
@@ -220,27 +221,17 @@ export default {
     eventTimeline
   },
   data: () => ({
+    myWSgroups: [],
     selectedRoom: {},
     forceReload: true,
     log: {},
     user: {},
     // OLD
-    clientInformation: {
-      room: 0,
-      id: 0,
-      uuid: new Date().getTime().toString(),
-      user: '',
-      time: ''
-    },
-    connection: null,
-    group: {},
-    username: '',
     valid: true,
     users: [],
     events: [],
     input: null,
     nonce: 0,
-    cards: ['Today', 'Yesterday'],
     drawer: null,
     // pallete
     pallete: false,
@@ -258,24 +249,9 @@ export default {
             TODO: Dont worry about this, its just ... i dont know,
             idea have two tokens. Short for auth, and long for user data
          */
-        const groups = JSON.parse(this.user.users_groups)
-        groups.forEach((element) => {
-          this.events[element.id] = []
-        })
       }).catch((e) => {
         this.$router.push({ path: '/' })
       })
-    }
-  },
-  computed: {
-    myWSgroups () {
-      const ws = []
-      const groups = JSON.parse(this.user.users_groups)
-      groups.forEach((element) => {
-        const Room = new RoomType(element.groupName)
-        ws.push(Room.createRoom())
-      })
-      return ws
     }
   },
   methods: {
@@ -283,8 +259,9 @@ export default {
       const timeEvent = (new Date()).toTimeString().replace(/:\d{2}\sGMT-\d{4}\s\((.*)\)/, (match, contents, offset) => {
         return ` ${contents.split(' ').map(v => v.charAt(0)).join('')}`
       })
+      const date = new Date().getTime().toString()
       const msgBox = {
-        uuid: new Date().getTime().toString(),
+        uuid: date,
         userID: this.user.id,
         groupID: this.selectedRoom.id,
         avatar: this.user.profileUrl,
@@ -292,15 +269,18 @@ export default {
         message: this.input,
         time: timeEvent
       }
-      console.log(this.selectedRoom)
       // Append List Item
-      const wsGroup = this.myWSgroups[this.selectedRoom.Index]
-      waitForSocketConnection(wsGroup, function () {
-        wsGroup.send(JSON.stringify(msgBox))
-      })
+      const WSgroup = this.myWSgroups[this.selectedRoom.Index]
+      if (WSgroup) {
+        waitForSocketConnection(WSgroup, () => {
+          this.events.push(msgBox)
+          WSgroup.send(JSON.stringify(msgBox))
+        })
+      }
       this.input = null
     },
     onRoom (data) {
+      this.events = []
       this.selectedRoom = data
     },
     onLog (data) {
@@ -311,50 +291,31 @@ export default {
     }
   },
   mounted () {
-    const StartChat = () => {
-      this.$nextTick(() => {
-        const wsGroup = this.myWSgroups[this.selectedRoom.Index]
-        let isOpen = false
-        if (!wsGroup.readyState) {
-          wsGroup.onopen = function (e) {
-            console.info('[open] Connection established')
-          }
-        }
-        wsGroup.onmessage = (e) => {
-          if (e.data !== undefined && e.data !== null && e.data !== '[]' && e.data) {
-            let data = []
-            try {
-              data = JSON.parse(e.data)
-              console.log(data)
-            } catch (error) {
-              console.error(error)
-              return false
-            }
-
-            if (!isOpen && !data.uuid) {
-              console.warn('get history', typeof data)
-              if (typeof data === 'object') {
-                this.events = Object.values(data)
-              } else {
-                this.events = data
-              }
-              isOpen = true
-            } else {
-              console.warn('push new message')
-              this.events[this.selectedRoom.id].push(data)
-            }
-          }
-          // this.timeline()
-        }
-      })
-    }
-    if (this.myWSgroups.length !== 0) {
-      (async () => {
-        await StartChat()
-      })()
-    }
     if (process.browser) {
       this.user = jwtDecode(localStorage.token)
+      let groups = []
+      try {
+        groups = JSON.parse(this.user.users_groups)
+      } catch (error) {
+        console.error(error)
+      }
+      groups.forEach((element) => {
+        const Room = new RoomType(
+          'ws://localhost:8080/', element.groupName.toLowerCase())
+          .listenRoom(element, this.events)
+        Room.onmessage = (e) => {
+          if (e.data !== undefined && e.data !== null && e.data !== '[]' && e.data) {
+            try {
+              const message = JSON.parse(e.data)
+              this.events.push(message)
+              console.warn(`[${message.groupID}] get new message from ${Room.url}`)
+            } catch (error) {
+              console.error(error)
+            }
+          }
+        }
+        this.myWSgroups.push(Room)
+      })
     }
   }
 }

@@ -6,16 +6,12 @@
       v-for="(event, index) in timeline"
       :key="index"
       class="mb-4"
-      color="pink"
       large
     >
-      <template v-if="event.user" v-slot:icon>
+      <template v-if="event.avatar" v-slot:icon>
         <v-avatar style="background: #1b1b1b;" size="50">
           <img :src="event.avatar">
         </v-avatar>
-        <span class="caption user_tag">{{ event.user }}</span>
-      </template>
-      <template v-else v-slot:icon>
         <span class="caption user_tag">{{ event.user }}</span>
       </template>
       <v-card class="elevation-2">
@@ -32,6 +28,7 @@
           />
         </v-row>
       </v-card>
+
     </v-timeline-item>
   </v-slide-x-transition>
 </template>
@@ -41,13 +38,17 @@
 export default {
   name: 'eventTimeline',
   props: {
+    id: Number,
     user: Object,
     events: Array
   },
   computed: {
     timeline () {
       if (this.events) {
-        return this.events.slice().reverse()
+        return this.events
+          .filter(i => i.groupID === this.id)
+          .slice()
+          .reverse()
       } else {
         return false
       }
